@@ -32,6 +32,7 @@ fn main() {
     } else {
         solutions
             .iter()
+            .rev()
             .for_each(|solution| println!("{}", solution));
     }
 }
