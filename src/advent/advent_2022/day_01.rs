@@ -5,14 +5,16 @@ use std::io::{prelude::*, BufReader};
 /// access from the air; the Elves' expedition traditionally goes on foot. As
 /// your boats approach land, the Elves begin taking inventory of their supplies.
 /// One important consideration is food - in particular, the number of Calories
-/// each Elf is carrying (your puzzle input). The Elves take turns writing down
-/// the number of Calories contained by the various meals, snacks, rations, etc.
-/// that they've brought with them, one item per line. Each Elf separates their
-/// own inventory from the previous Elf's inventory (if any) by a blank line.
+/// each Elf is carrying (your puzzle input).
+///
+/// The Elves take turns writing down the number of Calories contained by the
+/// various meals, snacks, rations, etc. that they've brought with them, one
+/// item per line. Each Elf separates their own inventory from the previous
+/// Elf's inventory (if any) by a blank line.
 ///
 /// PART 1 : Find the Elf carrying the most Calories. How many total Calories
 /// is that Elf carrying?
-/// PART 2 : Find the top three Elves carrying the most Calories. How many 
+/// PART 2 : Find the top three Elves carrying the most Calories. How many
 /// Calories are those Elves carrying in total?
 pub fn solve() -> () {
     let reader = BufReader::new(File::open("inputs/y2022d01.txt").expect("y2022d01.txt not found"));
