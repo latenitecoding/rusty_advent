@@ -43,7 +43,7 @@ pub fn solve() -> () {
             scoring(accumulator, &round)
         });
     println!(
-        "year: 2022, day: 01 => ({:?}, {:?})",
+        "year: 2022, day: 02 => ({:?}, {:?})",
         total_score, final_score
     );
 }
