@@ -1,6 +1,5 @@
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::{prelude::*, BufReader};
+use std::fs;
 use std::iter::Chain;
 use std::str::Chars;
 
@@ -36,31 +35,39 @@ use std::str::Chars;
 ///
 /// Every set of three lines in your list corresponds to a single group, but
 /// each group can have a different badge item type.
-///
+pub fn solve() -> (String, String) {
+    let content = fs::read_to_string("inputs/y2022d03.txt").expect("file not found");
+    (part_1(content.as_str()), part_2(content.as_str()))
+}
+
 /// PART 1 : Find the item type that appears in both compartments of each
 /// rucksack. What is the sum of the priorities of those item types?
-/// PART 2 : Find the item type that corresponds to the badges of each three-Elf
-/// group. What is the sum of the priorities of those item types?
-pub fn solve() -> () {
-    let reader = BufReader::new(File::open("inputs/y2022d03.txt").expect("y2022d03.txt not found"));
-    let rucksacks = reader
-        .lines()
-        .map(|line| Rucksack::from(line.expect("read error")))
-        .collect::<Vec<Rucksack>>();
-    let priority_sum = rucksacks
+fn part_1(input: &str) -> String {
+    let priority_sum = parse_rucksacks(input)
         .iter()
         .map(|sack| sack.intersect_compartments())
         .map(|item| priority_of(&item))
         .sum::<i32>();
-    let badge_priority_sum = (3..=rucksacks.len())
+    format!("{}", priority_sum)
+}
+
+/// PART 2 : Find the item type that corresponds to the badges of each three-Elf
+/// group. What is the sum of the priorities of those item types?
+fn part_2(input: &str) -> String {
+    let rucksacks = parse_rucksacks(input);
+    let priority_sum = (3..=rucksacks.len())
         .step_by(3)
         .map(|n| intersect_group(&rucksacks[(n - 3)..n]))
         .map(|badge| priority_of(&badge))
         .sum::<i32>();
-    println!(
-        "year: 2022, day: 03 => ({:?}, {:?})",
-        priority_sum, badge_priority_sum
-    );
+    format!("{}", priority_sum)
+}
+
+fn parse_rucksacks(input: &str) -> Vec<Rucksack> {
+    input
+        .split("\n")
+        .map(|line| Rucksack::from(line))
+        .collect::<Vec<Rucksack>>()
 }
 
 fn intersect_group(group: &[Rucksack]) -> String {
@@ -100,8 +107,8 @@ struct Rucksack {
     pub right: String,
 }
 
-impl From<String> for Rucksack {
-    fn from(line: String) -> Rucksack {
+impl From<&str> for Rucksack {
+    fn from(line: &str) -> Rucksack {
         let n = line.len();
         Rucksack {
             left: line[..(n / 2)].to_string(),
@@ -132,59 +139,17 @@ impl Rucksack {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
-    #[test]
-    fn part_01() {
-        let items_vec = vec![
-            "vJrwpWtwJgWrhcsFMMfFFhFp",
-            "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
-            "PmmdzqPrVvPwwTWBwg",
-            "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
-            "ttgJtRGJQctTZtZT",
-            "CrZsJsPPZsGzwwsLwLmpwMDw",
-        ]
-        .iter()
-        .map(|line| Rucksack::from(line.to_string()))
-        .map(|sack| sack.intersect_compartments())
-        .collect::<Vec<String>>();
-        assert_eq!(
-            items_vec
-                .iter()
-                .map(|items| items.as_str())
-                .collect::<Vec<&str>>(),
-            vec!["p", "L", "P", "v", "t", "s"]
-        );
-        assert_eq!(
-            items_vec
-                .iter()
-                .map(|items| priority_of(items))
-                .collect::<Vec<i32>>(),
-            vec![16, 38, 42, 22, 20, 19]
-        );
+    #[rstest]
+    #[case("vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw")]
+    fn test_part_1(#[case] input: &str) {
+        assert_eq!(part_1(input), "157");
     }
 
-    #[test]
-    fn part_02() {
-        let sacks = vec![
-            "vJrwpWtwJgWrhcsFMMfFFhFp",
-            "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
-            "PmmdzqPrVvPwwTWBwg",
-            "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
-            "ttgJtRGJQctTZtZT",
-            "CrZsJsPPZsGzwwsLwLmpwMDw",
-        ]
-        .iter()
-        .map(|line| Rucksack::from(line.to_string()))
-        .collect::<Vec<Rucksack>>();
-        let badges = (3..=sacks.len())
-            .step_by(3)
-            .map(|n| intersect_group(&sacks[(n - 3)..n]))
-            .collect::<Vec<String>>();
-        assert_eq!(badges, vec!["r", "Z"]);
-        let priorities = badges
-            .iter()
-            .map(|badge| priority_of(&badge))
-            .collect::<Vec<i32>>();
-        assert_eq!(priorities, vec![18, 52]);
+    #[rstest]
+    #[case("vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw")]
+    fn test_part_2(#[case] input: &str) {
+        assert_eq!(part_2(input), "70");
     }
 }

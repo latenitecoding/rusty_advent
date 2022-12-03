@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
-use std::fs::File;
-use std::io::{prelude::*, BufReader};
+use std::fs;
 
 /// Appreciative of your help yesterday, one Elf gives you an encrypted strategy
 /// guide (your puzzle input) that they say will be sure to help you win. "The
@@ -21,31 +20,38 @@ use std::io::{prelude::*, BufReader};
 /// The Elf finishes helping with the tent and sneaks back over to you. "Anyway,
 /// the second column says how the round needs to end: X means you need to lose,
 /// Y means you need to end the round in a draw, and Z means you need to win. Good luck!"
-///
+pub fn solve() -> (String, String) {
+    let content = fs::read_to_string("inputs/y2022d02.txt").expect("file not found");
+    (part_1(content.as_str()), part_2(content.as_str()))
+}
+
 /// PART 1 : What would your total score be if everything goes exactly according
 /// to your strategy guide?
-/// PART 2 : Following the Elf's instructions for the second column, what would
-/// your total score be if everything goes exactly according to your strategy guide?
-pub fn solve() -> () {
-    let reader = BufReader::new(File::open("inputs/y2022d02.txt").expect("y2022d02.txt not found"));
-    let rounds = reader
-        .lines()
-        .map(|line| Round::from(line.expect("read error")))
-        .collect::<Vec<Round>>();
-    let total_score = rounds
+fn part_1(input: &str) -> String {
+    let total_score = parse_rounds(input)
         .iter()
         .fold(0, |score, round| score + scoring_of(round));
-    let final_score = rounds
+    format!("{}", total_score)
+}
+
+/// PART 2 : Following the Elf's instructions for the second column, what would
+/// your total score be if everything goes exactly according to your strategy guide?
+fn part_2(input: &str) -> String {
+    let total_score = parse_rounds(input)
         .iter()
         .map(|round| Round {
             opp: round.opp,
             play: Throw::from((round.opp, Ordering::from(round.play))),
         })
         .fold(0, |score, round| score + scoring_of(&round));
-    println!(
-        "year: 2022, day: 02 => ({:?}, {:?})",
-        total_score, final_score
-    );
+    format!("{}", total_score)
+}
+
+fn parse_rounds(input: &str) -> Vec<Round> {
+    input
+        .split("\n")
+        .map(|line| Round::from(line))
+        .collect::<Vec<Round>>()
 }
 
 fn scoring_of(round: &Round) -> i32 {
@@ -136,8 +142,8 @@ struct Round {
     pub play: Throw,
 }
 
-impl From<String> for Round {
-    fn from(line: String) -> Round {
+impl From<&str> for Round {
+    fn from(line: &str) -> Round {
         let parts = line.split(" ").collect::<Vec<&str>>();
         Round {
             opp: Throw::from(parts[0]),
@@ -149,28 +155,17 @@ impl From<String> for Round {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
-    #[test]
-    fn part_01() {
-        let scores = vec!["A Y", "B X", "C Z"]
-            .iter()
-            .map(|line| Round::from(line.to_string()))
-            .map(|round| scoring_of(&round))
-            .collect::<Vec<i32>>();
-        assert_eq!(scores, vec![8, 1, 6]);
+    #[rstest]
+    #[case("A Y\nB X\nC Z")]
+    fn test_part_1(#[case] input: &str) {
+        assert_eq!(part_1(input), "15");
     }
 
-    #[test]
-    fn part_02() {
-        let scores = vec!["A Y", "B X", "C Z"]
-            .iter()
-            .map(|line| Round::from(line.to_string()))
-            .map(|round| Round {
-                opp: round.opp,
-                play: Throw::from((round.opp, Ordering::from(round.play))),
-            })
-            .map(|round| scoring_of(&round))
-            .collect::<Vec<i32>>();
-        assert_eq!(scores, vec![4, 1, 7]);
+    #[rstest]
+    #[case("A Y\nB X\nC Z")]
+    fn test_part_2(#[case] input: &str) {
+        assert_eq!(part_2(input), "12");
     }
 }
