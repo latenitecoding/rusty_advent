@@ -1,6 +1,11 @@
 use std::cmp::Ordering;
 use std::fs;
 
+pub fn solve() -> (String, String) {
+    let content = fs::read_to_string("inputs/y2022d02.txt").expect("file not found");
+    (part_1(content.as_str()), part_2(content.as_str()))
+}
+
 /// Appreciative of your help yesterday, one Elf gives you an encrypted strategy
 /// guide (your puzzle input) that they say will be sure to help you win. "The
 /// first column is what your opponent is going to play: A for Rock, B for Paper,
@@ -17,14 +22,6 @@ use std::fs;
 /// Paper, and 3 for Scissors) plus the score for the outcome of the round (0
 /// if you lost, 3 if the round was a draw, and 6 if you won).
 ///
-/// The Elf finishes helping with the tent and sneaks back over to you. "Anyway,
-/// the second column says how the round needs to end: X means you need to lose,
-/// Y means you need to end the round in a draw, and Z means you need to win. Good luck!"
-pub fn solve() -> (String, String) {
-    let content = fs::read_to_string("inputs/y2022d02.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
-}
-
 /// PART 1 : What would your total score be if everything goes exactly according
 /// to your strategy guide?
 fn part_1(input: &str) -> String {
@@ -34,6 +31,10 @@ fn part_1(input: &str) -> String {
     format!("{}", total_score)
 }
 
+/// The Elf finishes helping with the tent and sneaks back over to you. "Anyway,
+/// the second column says how the round needs to end: X means you need to lose,
+/// Y means you need to end the round in a draw, and Z means you need to win. Good luck!"
+///
 /// PART 2 : Following the Elf's instructions for the second column, what would
 /// your total score be if everything goes exactly according to your strategy guide?
 fn part_2(input: &str) -> String {

@@ -1,5 +1,10 @@
 use std::fs;
 
+pub fn solve() -> (String, String) {
+    let content = fs::read_to_string("inputs/y2022d01.txt").expect("file not found");
+    (part_1(content.as_str()), part_2(content.as_str()))
+}
+
 /// The jungle must be too overgrown and difficult to navigate in vehicles or
 /// access from the air; the Elves' expedition traditionally goes on foot. As
 /// your boats approach land, the Elves begin taking inventory of their supplies.
@@ -10,11 +15,7 @@ use std::fs;
 /// various meals, snacks, rations, etc. that they've brought with them, one
 /// item per line. Each Elf separates their own inventory from the previous
 /// Elf's inventory (if any) by a blank line.
-pub fn solve() -> (String, String) {
-    let content = fs::read_to_string("inputs/y2022d01.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
-}
-
+///
 /// PART 1 : Find the Elf carrying the most Calories. How many total Calories
 /// is that Elf carrying?
 fn part_1(input: &str) -> String {

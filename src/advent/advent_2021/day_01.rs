@@ -1,5 +1,10 @@
 use std::fs;
 
+pub fn solve() -> (String, String) {
+    let content = fs::read_to_string("inputs/y2021d01.txt").expect("file not found");
+    (part_1(content.as_str()), part_2(content.as_str()))
+}
+
 /// As the submarine drops below the surface of the ocean, it automatically
 /// performs a sonar sweep of the nearby sea floor. On a small screen, the sonar
 /// sweep report (your puzzle input) appears: each line is a measurement of the
@@ -9,14 +14,6 @@ use std::fs;
 /// increases, just so you know what you're dealing with - you never know if the
 /// keys will get carried into deeper water by an ocean current or a fish or something.
 ///
-/// Considering every single measurement isn't as useful as you expected: there's
-/// just too much noise in the data. Instead, consider sums of a three-measurement
-/// sliding window.
-pub fn solve() -> (String, String) {
-    let content = fs::read_to_string("inputs/y2021d01.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
-}
-
 /// PART 1 : Count the number of times a depth measurement increases from the
 /// previous measurement.
 fn part_1(input: &str) -> String {
@@ -31,6 +28,9 @@ fn part_1(input: &str) -> String {
     format!("{}", depth_increases)
 }
 
+/// Considering every single measurement isn't as useful as you expected: there's
+/// just too much noise in the data. Instead, consider sums of a three-measurement
+/// sliding window.
 /// PART 2 : Consider sums of a three-measurement sliding window. How many
 /// sums are larger than the previous sum?
 fn part_2(input: &str) -> String {

@@ -3,6 +3,11 @@ use std::fs;
 use std::iter::Chain;
 use std::str::Chars;
 
+pub fn solve() -> (String, String) {
+    let content = fs::read_to_string("inputs/y2022d03.txt").expect("file not found");
+    (part_1(content.as_str()), part_2(content.as_str()))
+}
+
 /// Each rucksack has two large compartments. All items of a given type are meant
 /// to go into exactly one of the two compartments. The Elf that did the packing
 /// failed to follow this rule for exactly one item type per rucksack.
@@ -22,6 +27,17 @@ use std::str::Chars;
 /// - Lowercase item types a through z have priorities 1 through 26.
 /// - Uppercase item types A through Z have priorities 27 through 52.
 ///
+/// PART 1 : Find the item type that appears in both compartments of each
+/// rucksack. What is the sum of the priorities of those item types?
+fn part_1(input: &str) -> String {
+    let priority_sum = parse_rucksacks(input)
+        .iter()
+        .map(|sack| sack.intersect_compartments())
+        .map(|item| priority_of(&item))
+        .sum::<i32>();
+    format!("{}", priority_sum)
+}
+
 /// For safety, the Elves are divided into groups of three. Every Elf carries a
 /// badge that identifies their group. For efficiency, within each group of three
 /// Elves, the badge is the only item type carried by all three Elves. That is, if
@@ -35,22 +51,7 @@ use std::str::Chars;
 ///
 /// Every set of three lines in your list corresponds to a single group, but
 /// each group can have a different badge item type.
-pub fn solve() -> (String, String) {
-    let content = fs::read_to_string("inputs/y2022d03.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
-}
-
-/// PART 1 : Find the item type that appears in both compartments of each
-/// rucksack. What is the sum of the priorities of those item types?
-fn part_1(input: &str) -> String {
-    let priority_sum = parse_rucksacks(input)
-        .iter()
-        .map(|sack| sack.intersect_compartments())
-        .map(|item| priority_of(&item))
-        .sum::<i32>();
-    format!("{}", priority_sum)
-}
-
+///
 /// PART 2 : Find the item type that corresponds to the badges of each three-Elf
 /// group. What is the sum of the priorities of those item types?
 fn part_2(input: &str) -> String {
