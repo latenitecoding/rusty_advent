@@ -1,3 +1,4 @@
+mod advent_2021;
 mod advent_2022;
 
 pub fn select_all_challenges() -> Vec<String> {
@@ -25,6 +26,7 @@ pub fn select_all_challenges_from_day(day: u32) -> Vec<String> {
 
 pub fn select_challenge(year: u32, day: u32) -> Option<String> {
     let solution = match year {
+        2021 => advent_2021::select_day(day),
         2022 => advent_2022::select_day(day),
         _ => None,
     };
