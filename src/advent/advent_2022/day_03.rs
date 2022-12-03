@@ -65,7 +65,7 @@ fn part_2(input: &str) -> String {
 
 fn parse_rucksacks(input: &str) -> Vec<Rucksack> {
     input
-        .split("\n")
+        .lines()
         .map(|line| Rucksack::from(line))
         .collect::<Vec<Rucksack>>()
 }

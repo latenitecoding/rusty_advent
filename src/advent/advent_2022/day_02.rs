@@ -49,7 +49,7 @@ fn part_2(input: &str) -> String {
 
 fn parse_rounds(input: &str) -> Vec<Round> {
     input
-        .split("\n")
+        .lines()
         .map(|line| Round::from(line))
         .collect::<Vec<Round>>()
 }

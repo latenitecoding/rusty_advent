@@ -36,7 +36,7 @@ fn part_2(input: &str) -> String {
 
 fn parse_elves(input: &str) -> Vec<Elf> {
     input
-        .split("\n")
+        .lines()
         .fold(vec![Vec::new()], |mut vec, line| -> Vec<Vec<&str>> {
             fold_lines_into_vec(&mut vec, line);
             vec
