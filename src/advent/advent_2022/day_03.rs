@@ -1,5 +1,8 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
+use std::iter::Chain;
+use std::str::Chars;
 
 /// Each rucksack has two large compartments. All items of a given type are meant
 /// to go into exactly one of the two compartments. The Elf that did the packing
@@ -44,48 +47,51 @@ pub fn solve() -> () {
         .lines()
         .map(|line| Rucksack::from(line.expect("read error")))
         .collect::<Vec<Rucksack>>();
-    let priorities = rucksacks
+    let priority_sum = rucksacks
         .iter()
-        .map(|sack| sack.intersect())
+        .map(|sack| sack.intersect_compartments())
         .map(|item| priority_of(&item))
         .sum::<i32>();
-    let badge_priorities = (3..rucksacks.len())
+    let badge_priority_sum = (3..=rucksacks.len())
         .step_by(3)
         .map(|n| intersect_group(&rucksacks[(n - 3)..n]))
         .map(|badge| priority_of(&badge))
         .sum::<i32>();
     println!(
         "year: 2022, day: 03 => ({:?}, {:?})",
-        priorities, badge_priorities
+        priority_sum, badge_priority_sum
     );
 }
 
-fn priority_of(items: &String) -> i32 {
-    let mut priority = 0;
-    for ch in items.chars() {
-        if 'a' <= ch && ch <= 'z' {
-            priority += (ch as u32) - ('a' as u32) + 1;
-        } else {
-            priority += (ch as u32) - ('A' as u32) + 27;
-        }
-    }
-    priority as i32
+fn intersect_group(group: &[Rucksack]) -> String {
+    let mut init: HashSet<char> = HashSet::new();
+    group[0].iter().for_each(|ch| {
+        init.insert(ch);
+    });
+    group[1..]
+        .iter()
+        .fold(init, |set, sack| -> HashSet<char> {
+            let mut inter: HashSet<char> = HashSet::new();
+            sack.iter().filter(|ch| set.contains(ch)).for_each(|ch| {
+                inter.insert(ch);
+            });
+            inter
+        })
+        .iter()
+        .collect::<String>()
 }
 
-fn intersect_group(rucksacks: &[Rucksack]) -> String {
-    let mut badge = String::new();
-    for ch in rucksacks[0].left.chars() {
-        if rucksacks[1].contains(ch) && rucksacks[2].contains(ch) && !badge.contains(ch) {
-            badge.push(ch);
-        }
-    }
-    for ch in rucksacks[0].right.chars() {
-        if rucksacks[1].contains(ch) && rucksacks[2].contains(ch) && !badge.contains(ch) {
-            badge.push(ch);
-        }
-    }
-    assert_eq!(badge.len(), 1);
-    badge
+fn priority_of(items: &String) -> i32 {
+    items
+        .chars()
+        .map(|ch| {
+            if 'a' <= ch && ch <= 'z' {
+                ((ch as u32) - ('a' as u32) + 1) as i32
+            } else {
+                ((ch as u32) - ('A' as u32) + 27) as i32
+            }
+        })
+        .sum::<i32>()
 }
 
 #[derive(Debug)]
@@ -105,19 +111,21 @@ impl From<String> for Rucksack {
 }
 
 impl Rucksack {
-    fn contains(&self, ch: char) -> bool {
-        self.left.contains(ch) || self.right.contains(ch)
+    fn intersect_compartments(&self) -> String {
+        let mut left_set: HashSet<char> = HashSet::new();
+        for ch in self.left.chars() {
+            left_set.insert(ch);
+        }
+        self.right
+            .chars()
+            .filter(|ch| left_set.contains(ch))
+            .collect::<HashSet<char>>()
+            .iter()
+            .collect::<String>()
     }
 
-    fn intersect(&self) -> String {
-        let mut item = String::new();
-        for ch in self.left.chars() {
-            if self.right.contains(ch) && !item.contains(ch) {
-                item.push(ch);
-            }
-        }
-        assert!(item.len() == 1);
-        item
+    fn iter(&self) -> Chain<Chars<'_>, Chars<'_>> {
+        self.left.chars().chain(self.right.chars())
     }
 }
 
@@ -126,7 +134,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sample_input() {
+    fn part_01() {
         let items_vec = vec![
             "vJrwpWtwJgWrhcsFMMfFFhFp",
             "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
@@ -137,7 +145,7 @@ mod tests {
         ]
         .iter()
         .map(|line| Rucksack::from(line.to_string()))
-        .map(|sack| sack.intersect())
+        .map(|sack| sack.intersect_compartments())
         .collect::<Vec<String>>();
         assert_eq!(
             items_vec
@@ -156,19 +164,11 @@ mod tests {
     }
 
     #[test]
-    fn sample_badges() {
-        let group_1 = vec![
+    fn part_02() {
+        let sacks = vec![
             "vJrwpWtwJgWrhcsFMMfFFhFp",
             "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
             "PmmdzqPrVvPwwTWBwg",
-        ]
-        .iter()
-        .map(|line| Rucksack::from(line.to_string()))
-        .collect::<Vec<Rucksack>>();
-        let badge_1 = intersect_group(&group_1[..3]);
-        assert_eq!(badge_1, "r".to_string());
-        assert_eq!(priority_of(&badge_1), 18);
-        let group_2 = vec![
             "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
             "ttgJtRGJQctTZtZT",
             "CrZsJsPPZsGzwwsLwLmpwMDw",
@@ -176,8 +176,15 @@ mod tests {
         .iter()
         .map(|line| Rucksack::from(line.to_string()))
         .collect::<Vec<Rucksack>>();
-        let badge_2 = intersect_group(&group_2[..3]);
-        assert_eq!(badge_2, "Z".to_string());
-        assert_eq!(priority_of(&badge_2), 52);
+        let badges = (3..=sacks.len())
+            .step_by(3)
+            .map(|n| intersect_group(&sacks[(n - 3)..n]))
+            .collect::<Vec<String>>();
+        assert_eq!(badges, vec!["r", "Z"]);
+        let priorities = badges
+            .iter()
+            .map(|badge| priority_of(&badge))
+            .collect::<Vec<i32>>();
+        assert_eq!(priorities, vec![18, 52]);
     }
 }

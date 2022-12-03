@@ -20,25 +20,32 @@ pub fn solve() -> () {
     let reader = BufReader::new(File::open("inputs/y2022d01.txt").expect("y2022d01.txt not found"));
     let mut elves = reader
         .lines()
-        .fold(vec![0], |mut vec, line| -> Vec<i32> {
-            let line = line.expect("read error");
-            if line == "" {
-                vec.push(0);
-            } else {
-                let n = vec.len();
-                vec[n - 1] += line.parse::<i32>().expect("parse error");
-            }
+        .fold(vec![Vec::new()], |mut vec, line| -> Vec<Vec<String>> {
+            fold_lines(&mut vec, line.expect("read error"));
             vec
         })
-        .into_iter()
+        .iter()
+        .map(|vec| {
+            vec.iter()
+                .map(|line| line.parse::<i32>().expect("parse error"))
+                .sum::<i32>()
+        })
         .map(|calories| Elf::from(calories))
         .collect::<Vec<Elf>>();
-    elves.sort();
+    elves.sort_by(|a, b| b.cmp(a));
     println!(
         "year: 2022, day: 01 => ({:?}, {:?})",
         elves[0].calories,
         elves[..3].iter().map(|elf| elf.calories).sum::<i32>()
     );
+}
+
+fn fold_lines(vec: &mut Vec<Vec<String>>, line: String) -> () {
+    if line == "" {
+        vec.push(Vec::new());
+    } else {
+        vec.last_mut().expect("vec empty").push(line);
+    }
 }
 
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -49,5 +56,57 @@ struct Elf {
 impl From<i32> for Elf {
     fn from(calories: i32) -> Elf {
         Elf { calories }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part_01() {
+        let elves = vec![
+            "1000", "2000", "3000", "", "4000", "", "5000", "6000", "", "7000", "8000", "9000", "",
+            "10000",
+        ]
+        .iter()
+        .fold(vec![Vec::new()], |mut vec, line| -> Vec<Vec<String>> {
+            fold_lines(&mut vec, line.to_string());
+            vec
+        })
+        .iter()
+        .map(|vec| {
+            vec.iter()
+                .map(|line| line.parse::<i32>().unwrap())
+                .sum::<i32>()
+        })
+        .collect::<Vec<i32>>();
+        assert_eq!(elves, vec![6_000, 4_000, 11_000, 24_000, 10_000]);
+    }
+
+    #[test]
+    fn part_02() {
+        let mut elves = vec![
+            "1000", "2000", "3000", "", "4000", "", "5000", "6000", "", "7000", "8000", "9000", "",
+            "10000",
+        ]
+        .iter()
+        .fold(vec![Vec::new()], |mut vec, line| -> Vec<Vec<String>> {
+            fold_lines(&mut vec, line.to_string());
+            vec
+        })
+        .iter()
+        .map(|vec| {
+            vec.iter()
+                .map(|line| line.parse::<i32>().unwrap())
+                .sum::<i32>()
+        })
+        .map(|calories| Elf::from(calories))
+        .collect::<Vec<Elf>>();
+        elves.sort_by(|a, b| b.cmp(a));
+        assert_eq!(
+            elves[..3].iter().map(|elf| elf.calories).sum::<i32>(),
+            45_000
+        );
     }
 }

@@ -32,34 +32,35 @@ pub fn solve() -> () {
         .lines()
         .map(|line| Round::from(line.expect("read error")))
         .collect::<Vec<Round>>();
-    let total_score = rounds.iter().fold(0, scoring);
+    let total_score = rounds
+        .iter()
+        .fold(0, |score, round| score + scoring_of(round));
     let final_score = rounds
         .iter()
         .map(|round| Round {
             opp: round.opp,
             play: Throw::from((round.opp, Ordering::from(round.play))),
         })
-        .fold(0, |accumulator: i32, round: Round| {
-            scoring(accumulator, &round)
-        });
+        .fold(0, |score, round| score + scoring_of(&round));
     println!(
         "year: 2022, day: 02 => ({:?}, {:?})",
         total_score, final_score
     );
 }
 
-fn scoring(mut accumulator: i32, round: &Round) -> i32 {
-    accumulator += match round.play {
+fn scoring_of(round: &Round) -> i32 {
+    let score = match round.play {
         Throw::Rock => 1,
         Throw::Paper => 2,
         Throw::Scissors => 3,
     };
     if round.play > round.opp {
-        accumulator += 6;
+        score + 6
     } else if round.play == round.opp {
-        accumulator += 3;
+        score + 3
+    } else {
+        score
     }
-    accumulator
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -142,5 +143,34 @@ impl From<String> for Round {
             opp: Throw::from(parts[0]),
             play: Throw::from(parts[1]),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part_01() {
+        let scores = vec!["A Y", "B X", "C Z"]
+            .iter()
+            .map(|line| Round::from(line.to_string()))
+            .map(|round| scoring_of(&round))
+            .collect::<Vec<i32>>();
+        assert_eq!(scores, vec![8, 1, 6]);
+    }
+
+    #[test]
+    fn part_02() {
+        let scores = vec!["A Y", "B X", "C Z"]
+            .iter()
+            .map(|line| Round::from(line.to_string()))
+            .map(|round| Round {
+                opp: round.opp,
+                play: Throw::from((round.opp, Ordering::from(round.play))),
+            })
+            .map(|round| scoring_of(&round))
+            .collect::<Vec<i32>>();
+        assert_eq!(scores, vec![4, 1, 7]);
     }
 }
