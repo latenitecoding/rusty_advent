@@ -5,7 +5,7 @@ use std::str::Chars;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2022d03.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// Each rucksack has two large compartments. All items of a given type are meant
@@ -30,11 +30,11 @@ pub fn solve() -> (String, String) {
 /// PART 1 : Find the item type that appears in both compartments of each
 /// rucksack. What is the sum of the priorities of those item types?
 fn part_1(input: &str) -> String {
-    let priority_sum = parse_rucksacks(input)
-        .iter()
+    let priority_sum = parse_input(input)
+        .into_iter()
         .map(|sack| sack.intersect_compartments())
         .map(|item| priority_of(&item))
-        .sum::<i32>();
+        .sum::<u32>();
     format!("{}", priority_sum)
 }
 
@@ -55,16 +55,16 @@ fn part_1(input: &str) -> String {
 /// PART 2 : Find the item type that corresponds to the badges of each three-Elf
 /// group. What is the sum of the priorities of those item types?
 fn part_2(input: &str) -> String {
-    let rucksacks = parse_rucksacks(input);
+    let rucksacks = parse_input(input);
     let priority_sum = (3..=rucksacks.len())
         .step_by(3)
         .map(|n| intersect_group(&rucksacks[(n - 3)..n]))
         .map(|badge| priority_of(&badge))
-        .sum::<i32>();
+        .sum::<u32>();
     format!("{}", priority_sum)
 }
 
-fn parse_rucksacks(input: &str) -> Vec<Rucksack> {
+fn parse_input(input: &str) -> Vec<Rucksack> {
     input
         .lines()
         .map(|line| Rucksack::from(line))
@@ -89,17 +89,17 @@ fn intersect_group(group: &[Rucksack]) -> String {
         .collect::<String>()
 }
 
-fn priority_of(items: &String) -> i32 {
+fn priority_of(items: &String) -> u32 {
     items
         .chars()
         .map(|ch| {
             if 'a' <= ch && ch <= 'z' {
-                ((ch as u32) - ('a' as u32) + 1) as i32
+                (ch as u32) - ('a' as u32) + 1
             } else {
-                ((ch as u32) - ('A' as u32) + 27) as i32
+                (ch as u32) - ('A' as u32) + 27
             }
         })
-        .sum::<i32>()
+        .sum::<u32>()
 }
 
 #[derive(Debug)]

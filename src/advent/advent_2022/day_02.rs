@@ -1,9 +1,10 @@
 use std::cmp::Ordering;
 use std::fs;
+use std::str::FromStr;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2022d02.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// Appreciative of your help yesterday, one Elf gives you an encrypted strategy
@@ -25,9 +26,10 @@ pub fn solve() -> (String, String) {
 /// PART 1 : What would your total score be if everything goes exactly according
 /// to your strategy guide?
 fn part_1(input: &str) -> String {
-    let total_score = parse_rounds(input)
-        .iter()
-        .fold(0, |score, round| score + scoring_of(round));
+    let total_score = parse_input(input)
+        .into_iter()
+        .map(|pair| (pair.0, Throw::from(pair.1)))
+        .fold(0, |score, throws| score + scoring_of(&throws.0, &throws.1));
     format!("{}", total_score)
 }
 
@@ -38,61 +40,92 @@ fn part_1(input: &str) -> String {
 /// PART 2 : Following the Elf's instructions for the second column, what would
 /// your total score be if everything goes exactly according to your strategy guide?
 fn part_2(input: &str) -> String {
-    let total_score = parse_rounds(input)
-        .iter()
-        .map(|round| Round {
-            opp: round.opp,
-            play: Throw::from((round.opp, Ordering::from(round.play))),
-        })
-        .fold(0, |score, round| score + scoring_of(&round));
+    let total_score = parse_input(input)
+        .into_iter()
+        .map(|pair| (pair.0, Throw::from((pair.0, Ordering::from(pair.1)))))
+        .fold(0, |score, throws| score + scoring_of(&throws.0, &throws.1));
     format!("{}", total_score)
 }
 
-fn parse_rounds(input: &str) -> Vec<Round> {
+fn parse_input(input: &str) -> Vec<(Throw, Key)> {
     input
         .lines()
-        .map(|line| Round::from(line))
-        .collect::<Vec<Round>>()
+        .map(|line| {
+            let parts = line.split(" ").collect::<Vec<&str>>();
+            assert_eq!(
+                parts.len(),
+                2,
+                "each line should include two space-delimited symbols"
+            );
+            (
+                parts[0]
+                    .parse::<Throw>()
+                    .expect("parse error from line to Throw"),
+                parts[1]
+                    .parse::<Key>()
+                    .expect("parse error from line to Key"),
+            )
+        })
+        .collect::<Vec<(Throw, Key)>>()
 }
 
-fn scoring_of(round: &Round) -> i32 {
-    let score = match round.play {
-        Throw::Rock => 1,
-        Throw::Paper => 2,
-        Throw::Scissors => 3,
-    };
-    if round.play > round.opp {
-        score + 6
-    } else if round.play == round.opp {
-        score + 3
+fn scoring_of(opp_throw: &Throw, player_throw: &Throw) -> u32 {
+    let throw_score = u32::from(player_throw);
+    if player_throw > opp_throw {
+        throw_score + 6
+    } else if player_throw == opp_throw {
+        throw_score + 3
     } else {
-        score
+        throw_score
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug)]
+enum Key {
+    X,
+    Y,
+    Z,
+}
+
+impl FromStr for Key {
+    type Err = &'static str;
+
+    fn from_str(key_str: &str) -> Result<Key, &'static str> {
+        match key_str {
+            "X" => Ok(Key::X),
+            "Y" => Ok(Key::Y),
+            "Z" => Ok(Key::Z),
+            _ => Err("can only parse 'X', 'Y', and 'Z' as Keys"),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Throw {
     Rock,
     Paper,
     Scissors,
 }
 
-impl From<&str> for Throw {
-    fn from(throw: &str) -> Throw {
-        match throw {
-            "A" | "X" => Throw::Rock,
-            "B" | "Y" => Throw::Paper,
-            _ => Throw::Scissors,
+impl FromStr for Throw {
+    type Err = &'static str;
+
+    fn from_str(throw_str: &str) -> Result<Throw, &'static str> {
+        match throw_str {
+            "A" => Ok(Throw::Rock),
+            "B" => Ok(Throw::Paper),
+            "C" => Ok(Throw::Scissors),
+            _ => Err("can only parse 'A', 'B', and 'C' as Throws"),
         }
     }
 }
 
-impl From<Throw> for Ordering {
-    fn from(throw: Throw) -> Ordering {
-        match throw {
-            Throw::Rock => Ordering::Less,
-            Throw::Paper => Ordering::Equal,
-            Throw::Scissors => Ordering::Greater,
+impl From<Key> for Throw {
+    fn from(key: Key) -> Throw {
+        match key {
+            Key::X => Throw::Rock,
+            Key::Y => Throw::Paper,
+            Key::Z => Throw::Scissors,
         }
     }
 }
@@ -103,7 +136,7 @@ impl From<(Throw, Ordering)> for Throw {
             Ordering::Less => match pair.0 {
                 Throw::Rock => Throw::Scissors,
                 Throw::Paper => Throw::Rock,
-                Throw::Scissors => Throw::Paper,
+                Throw::Scissors => Throw::Rock,
             },
             Ordering::Equal => pair.0,
             Ordering::Greater => match pair.0 {
@@ -117,38 +150,33 @@ impl From<(Throw, Ordering)> for Throw {
 
 impl PartialOrd for Throw {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self {
-            Throw::Rock => match other {
-                Throw::Rock => Some(Ordering::Equal),
-                Throw::Paper => Some(Ordering::Less),
-                Throw::Scissors => Some(Ordering::Greater),
-            },
-            Throw::Paper => match other {
-                Throw::Rock => Some(Ordering::Greater),
-                Throw::Paper => Some(Ordering::Equal),
-                Throw::Scissors => Some(Ordering::Less),
-            },
-            Throw::Scissors => match other {
-                Throw::Rock => Some(Ordering::Less),
-                Throw::Paper => Some(Ordering::Greater),
-                Throw::Scissors => Some(Ordering::Equal),
-            },
+        let (self_score, other_score) = (u32::from(self), u32::from(other));
+        if self_score == other_score {
+            Some(Ordering::Equal)
+        } else if self_score % 3 + 1 == other_score {
+            Some(Ordering::Less)
+        } else {
+            Some(Ordering::Greater)
         }
     }
 }
 
-#[derive(Debug)]
-struct Round {
-    pub opp: Throw,
-    pub play: Throw,
+impl From<&Throw> for u32 {
+    fn from(throw: &Throw) -> u32 {
+        match throw {
+            Throw::Rock => 1,
+            Throw::Paper => 2,
+            Throw::Scissors => 3,
+        }
+    }
 }
 
-impl From<&str> for Round {
-    fn from(line: &str) -> Round {
-        let parts = line.split(" ").collect::<Vec<&str>>();
-        Round {
-            opp: Throw::from(parts[0]),
-            play: Throw::from(parts[1]),
+impl From<Key> for Ordering {
+    fn from(key: Key) -> Ordering {
+        match key {
+            Key::X => Ordering::Less,
+            Key::Y => Ordering::Equal,
+            Key::Z => Ordering::Greater,
         }
     }
 }

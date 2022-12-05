@@ -17,17 +17,14 @@ struct Args {
 fn main() {
     let solutions = match Args::parse() {
         Args { year: 0, day: 0 } => advent::select_all_challenges(),
-        Args { year, day: 0 } => advent::select_all_challenges_from_year(year),
-        Args { year: 0, day } => advent::select_all_challenges_from_day(day),
-        Args { year, day } => {
-            let solution = advent::select_challenge(year, day);
-            match solution {
-                Some(str) => vec![str],
-                None => Vec::new(),
-            }
-        }
+        Args { year, day: 0 } => advent::select_challenges_from_year(year),
+        Args { year: 0, day } => advent::select_challenges_with_day(day),
+        Args { year, day } => match advent::select_challenge(year, day) {
+            Some(solution) => vec![solution],
+            None => Vec::new(),
+        },
     };
-    if solutions.len() == 0 {
+    if solutions.is_empty() {
         println!("Sorry! No solutions...");
     } else {
         solutions

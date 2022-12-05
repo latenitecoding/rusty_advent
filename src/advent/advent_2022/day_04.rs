@@ -2,7 +2,7 @@ use std::fs;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2022d04.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// Space needs to be cleared before the last supplies can be unloaded from the
@@ -18,19 +18,17 @@ pub fn solve() -> (String, String) {
 /// PART 1 : In how many assignment pairs does one range fully contain the other?
 fn part_1(input: &str) -> String {
     let num_redundant_pairs =
-        parse_assignment_pairs(input)
+        parse_input(input)
             .iter()
-            .fold(0, |num_pairs, pair| -> i32 {
-                match pair.0.intersect(&pair.1) {
-                    Some(intersect) => {
-                        if pair.0 == intersect || pair.1 == intersect {
-                            num_pairs + 1
-                        } else {
-                            num_pairs
-                        }
+            .fold(0, |num_pairs, pair| match pair.0.intersect(&pair.1) {
+                Some(intersect) => {
+                    if pair.0 == intersect || pair.1 == intersect {
+                        num_pairs + 1
+                    } else {
+                        num_pairs
                     }
-                    None => num_pairs,
                 }
+                None => num_pairs,
             });
     format!("{}", num_redundant_pairs)
 }
@@ -41,18 +39,16 @@ fn part_1(input: &str) -> String {
 /// PART 2 : In how many assignment pairs do the ranges overlap?
 fn part_2(input: &str) -> String {
     let num_overlapping_pairs =
-        parse_assignment_pairs(input)
+        parse_input(input)
             .iter()
-            .fold(0, |num_pairs, pair| -> i32 {
-                match pair.0.intersect(&pair.1) {
-                    Some(_) => num_pairs + 1,
-                    None => num_pairs,
-                }
+            .fold(0, |num_pairs, pair| match pair.0.intersect(&pair.1) {
+                Some(_) => num_pairs + 1,
+                None => num_pairs,
             });
     format!("{}", num_overlapping_pairs)
 }
 
-fn parse_assignment_pairs(input: &str) -> Vec<(Assignment, Assignment)> {
+fn parse_input(input: &str) -> Vec<(Assignment, Assignment)> {
     input
         .lines()
         .map(|line| {
@@ -64,19 +60,24 @@ fn parse_assignment_pairs(input: &str) -> Vec<(Assignment, Assignment)> {
 
 #[derive(Debug, PartialEq)]
 struct Assignment {
-    pub left: i32,
-    pub right: i32,
+    pub left: u32,
+    pub right: u32,
 }
 
 impl From<&str> for Assignment {
     fn from(line: &str) -> Assignment {
         let parts = line.split("-").collect::<Vec<&str>>();
+        assert_eq!(
+            parts.len(),
+            2,
+            "each assignment should include two '-' delimited u32s"
+        );
         Assignment {
             left: parts[0]
-                .parse::<i32>()
+                .parse::<u32>()
                 .expect("parse error on assignment left"),
             right: parts[1]
-                .parse::<i32>()
+                .parse::<u32>()
                 .expect("parse error on assignment right"),
         }
     }

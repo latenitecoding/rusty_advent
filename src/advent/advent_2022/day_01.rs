@@ -2,7 +2,7 @@ use std::fs;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2022d01.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// The jungle must be too overgrown and difficult to navigate in vehicles or
@@ -19,56 +19,31 @@ pub fn solve() -> (String, String) {
 /// PART 1 : Find the Elf carrying the most Calories. How many total Calories
 /// is that Elf carrying?
 fn part_1(input: &str) -> String {
-    let elf_calories = parse_elves(input)
-        .iter()
+    let max_elf = parse_input(input)
+        .into_iter()
         .max()
-        .expect("at least one elf")
-        .calories;
-    format!("{}", elf_calories)
+        .expect("parsing input results in empty vector");
+    format!("{}", max_elf)
 }
 
 /// PART 2 : Find the top three Elves carrying the most Calories. How many
 /// Calories are those Elves carrying in total?
 fn part_2(input: &str) -> String {
-    let mut elves = parse_elves(input);
+    let mut elves = parse_input(input);
     elves.sort_by(|a, b| b.cmp(a));
-    format!("{}", elves[..3].iter().map(|elf| elf.calories).sum::<i32>())
+    format!("{}", elves[..3].iter().sum::<u32>())
 }
 
-fn parse_elves(input: &str) -> Vec<Elf> {
+fn parse_input(input: &str) -> Vec<u32> {
     input
-        .lines()
-        .fold(vec![Vec::new()], |mut vec, line| -> Vec<Vec<&str>> {
-            fold_lines_into_vec(&mut vec, line);
-            vec
+        .split("\n\n")
+        .map(|elf_inventory| {
+            elf_inventory
+                .lines()
+                .map(|line| line.parse::<u32>().expect("parse<u32> error on calories"))
+                .sum::<u32>()
         })
-        .iter()
-        .map(|vec| {
-            vec.iter()
-                .map(|line| line.parse::<i32>().expect("parse error"))
-                .sum::<i32>()
-        })
-        .map(|calories| Elf::from(calories))
-        .collect::<Vec<Elf>>()
-}
-
-fn fold_lines_into_vec<'a>(vec: &mut Vec<Vec<&'a str>>, line: &'a str) -> () {
-    if line == "" {
-        vec.push(Vec::new());
-    } else {
-        vec.last_mut().expect("vec empty").push(line);
-    }
-}
-
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
-struct Elf {
-    pub calories: i32,
-}
-
-impl From<i32> for Elf {
-    fn from(calories: i32) -> Elf {
-        Elf { calories }
-    }
+        .collect::<Vec<u32>>()
 }
 
 #[cfg(test)]
