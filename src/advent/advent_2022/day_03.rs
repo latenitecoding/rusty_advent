@@ -1,10 +1,8 @@
 use std::collections::HashSet;
-use std::fs;
 use std::str::Chars;
 
-pub fn solve() -> (String, String) {
-    let content = fs::read_to_string("inputs/y2022d03.txt").expect("file not found");
-    (part_1(&content), part_2(&content))
+pub fn solve(input: &str) -> (String, String) {
+    (part_1(&input), part_2(&input))
 }
 
 /// Each rucksack has two large compartments. All items of a given type are meant

@@ -1,9 +1,7 @@
-use std::fs;
 use std::str::FromStr;
 
-pub fn solve() -> (String, String) {
-    let content = fs::read_to_string("inputs/y2021d02.txt").expect("file not found");
-    (part_1(&content), part_2(&content))
+pub fn solve(input: &str) -> (String, String) {
+    (part_1(&input), part_2(&input))
 }
 
 /// Now, you need to figure out how to pilot this thing. It seems like the

@@ -1,8 +1,5 @@
-use std::fs;
-
-pub fn solve() -> (String, String) {
-    let content = fs::read_to_string("inputs/y2021d04.txt").expect("file not found");
-    (part_1(&content), part_2(&content))
+pub fn solve(input: &str) -> (String, String) {
+    (part_1(&input), part_2(&input))
 }
 
 /// Bingo is played on a set of boards each consisting of a 5x5 grid of numbers.
