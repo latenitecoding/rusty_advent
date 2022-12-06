@@ -1,8 +1,9 @@
 use std::fs;
+use std::str::FromStr;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2021d02.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// Now, you need to figure out how to pilot this thing. It seems like the
@@ -18,14 +19,12 @@ pub fn solve() -> (String, String) {
 /// horizontal position by your final depth?
 fn part_1(input: &str) -> String {
     let (pos, depth) =
-        parse_commands(input)
+        parse_input(input)
             .iter()
-            .fold((0, 0), |(pos, depth), command| -> (i32, i32) {
-                match command.op {
-                    SubOp::Forward => (pos + command.dist, depth),
-                    SubOp::Down => (pos, depth + command.dist),
-                    SubOp::Up => (pos, depth - command.dist),
-                }
+            .fold((0, 0), |(pos, depth), command| match command.op {
+                SubOp::Forward => (pos + command.dist, depth),
+                SubOp::Down => (pos, depth + command.dist),
+                SubOp::Up => (pos, depth - command.dist),
             });
     format!("{}", pos * depth)
 }
@@ -44,20 +43,18 @@ fn part_1(input: &str) -> String {
 /// course. What do you get if you multiply your final horizontal position by
 /// your final depth?
 fn part_2(input: &str) -> String {
-    let (pos, depth, _) = parse_commands(input).iter().fold(
-        (0, 0, 0),
-        |(pos, depth, aim), command| -> (i32, i32, i32) {
-            match command.op {
+    let (pos, depth, _) =
+        parse_input(input)
+            .iter()
+            .fold((0, 0, 0), |(pos, depth, aim), command| match command.op {
                 SubOp::Forward => (pos + command.dist, depth + aim * command.dist, aim),
                 SubOp::Down => (pos, depth, aim + command.dist),
                 SubOp::Up => (pos, depth, aim - command.dist),
-            }
-        },
-    );
+            });
     format!("{}", pos * depth)
 }
 
-fn parse_commands(input: &str) -> Vec<Command> {
+fn parse_input(input: &str) -> Vec<Command> {
     input
         .lines()
         .map(|line| Command::from(line))
@@ -71,12 +68,15 @@ enum SubOp {
     Up,
 }
 
-impl From<&str> for SubOp {
-    fn from(line: &str) -> SubOp {
+impl FromStr for SubOp {
+    type Err = &'static str;
+
+    fn from_str(line: &str) -> Result<SubOp, &'static str> {
         match line {
-            "forward" => SubOp::Forward,
-            "down" => SubOp::Down,
-            _ => SubOp::Up,
+            "forward" => Ok(SubOp::Forward),
+            "down" => Ok(SubOp::Down),
+            "up" => Ok(SubOp::Up),
+            _ => Err("can only parse 'forward', 'down', and 'up' as SubOps"),
         }
     }
 }
@@ -84,15 +84,20 @@ impl From<&str> for SubOp {
 #[derive(Debug)]
 struct Command {
     pub op: SubOp,
-    pub dist: i32,
+    pub dist: u32,
 }
 
 impl From<&str> for Command {
     fn from(line: &str) -> Command {
         let parts = line.split(" ").collect::<Vec<&str>>();
+        assert_eq!(
+            parts.len(),
+            2,
+            "commands should include two space-delimited parts"
+        );
         Command {
-            op: SubOp::from(parts[0]),
-            dist: parts[1].parse::<i32>().expect("parse error"),
+            op: parts[0].parse::<SubOp>().expect("parse error on SubOp"),
+            dist: parts[1].parse::<u32>().expect("parse error on X"),
         }
     }
 }

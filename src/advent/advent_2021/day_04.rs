@@ -2,7 +2,7 @@ use std::fs;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2021d04.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// Bingo is played on a set of boards each consisting of a 5x5 grid of numbers.
@@ -21,13 +21,13 @@ pub fn solve() -> (String, String) {
 /// PART 1 : To guarantee victory against the giant squid, figure out which
 /// board will win first. What will your final score be if you choose that board?
 fn part_1(input: &str) -> String {
-    let queries = parse_queries(input);
-    let mut boards = parse_boards(input);
-    let final_score = queries.iter().fold(0, |final_score, q| -> i32 {
+    let queries = parse_input_queries(input);
+    let mut boards = parse_input_boards(input);
+    let final_score = queries.iter().fold(0, |final_score, q| {
         if final_score > 0 {
             return final_score;
         }
-        boards.iter_mut().fold(0, |score, board| -> i32 {
+        boards.iter_mut().fold(0, |score, board| {
             if score > 0 {
                 return score;
             }
@@ -51,10 +51,10 @@ fn part_1(input: &str) -> String {
 /// PART 2 : Figure out which board will win last. Once it wins, what would
 /// its final score be?
 fn part_2(input: &str) -> String {
-    let queries = parse_queries(input);
-    let mut boards = parse_boards(input);
-    let final_score = queries.iter().fold(0, |final_score, q| -> i32 {
-        boards.iter_mut().fold(final_score, |score, board| -> i32 {
+    let queries = parse_input_queries(input);
+    let mut boards = parse_input_boards(input);
+    let final_score = queries.iter().fold(0, |final_score, q| {
+        boards.iter_mut().fold(final_score, |score, board| {
             if board.has_won() {
                 return score;
             }
@@ -69,17 +69,17 @@ fn part_2(input: &str) -> String {
     format!("{}", final_score)
 }
 
-fn parse_queries(input: &str) -> Vec<i32> {
+fn parse_input_queries(input: &str) -> Vec<u32> {
     input
         .lines()
         .nth(0)
-        .expect("query on the first line")
+        .expect("no initial query provided")
         .split(",")
-        .map(|part| part.parse::<i32>().expect("parse error on query"))
-        .collect::<Vec<i32>>()
+        .map(|part| part.parse::<u32>().expect("parse error on query"))
+        .collect::<Vec<u32>>()
 }
 
-fn parse_boards(input: &str) -> Vec<BingoBoard> {
+fn parse_input_boards(input: &str) -> Vec<BingoBoard> {
     let lines = input.split("\n").collect::<Vec<&str>>();
     (7..=lines.len())
         .step_by(6)
@@ -89,12 +89,12 @@ fn parse_boards(input: &str) -> Vec<BingoBoard> {
 
 #[derive(Debug)]
 struct BingoBoard {
-    pub board: [[i32; 6]; 6],
+    pub board: [[u32; 6]; 6],
 }
 
 impl From<&[&str]> for BingoBoard {
     fn from(lines: &[&str]) -> BingoBoard {
-        let mut board = [[0; 6]; 6];
+        let mut board = [[0u32; 6]; 6];
         lines
             .iter()
             .zip(1..=5)
@@ -103,7 +103,7 @@ impl From<&[&str]> for BingoBoard {
                     .filter(|part| !part.is_empty())
                     .zip(1..=5)
                     .map(move |(part, col)| {
-                        (row, col, part.parse::<i32>().expect("parse error on board"))
+                        (row, col, part.parse::<u32>().expect("parse error on board"))
                     })
             })
             .flatten()
@@ -127,11 +127,11 @@ impl BingoBoard {
         false
     }
 
-    fn sum(&self) -> i32 {
+    fn sum(&self) -> u32 {
         self.board[0][0]
     }
 
-    fn update(&mut self, num: i32) -> () {
+    fn update(&mut self, num: u32) -> () {
         for row in 1..=5 {
             for col in 1..=5 {
                 if self.board[row][col] == num {

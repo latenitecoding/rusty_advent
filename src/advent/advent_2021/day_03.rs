@@ -2,7 +2,7 @@ use std::fs;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2021d03.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// The diagnostic report (your puzzle input) consists of a list of binary
@@ -20,14 +20,14 @@ pub fn solve() -> (String, String) {
 /// gamma rate and epsilon rate, then multiply them together. What is the power
 /// consumption of the submarine?
 fn part_1(input: &str) -> String {
-    let diagnostics = parse_diagnostics(input);
+    let diagnostics = parse_input(input);
     let m = diagnostics[0].len();
     let (gamma_rate, epsilon_rate) = (0..m)
         .map(|k| {
             let (num_zeroes, num_ones) = diagnostics
                 .iter()
                 .map(|diagnostic| diagnostic.digit_at(k))
-                .fold((0, 0), |(num_zeroes, num_ones), bit| -> (i32, i32) {
+                .fold((0, 0), |(num_zeroes, num_ones), bit| {
                     if bit == 0 {
                         (num_zeroes + 1, num_ones)
                     } else {
@@ -40,15 +40,12 @@ fn part_1(input: &str) -> String {
                 (0, 1)
             }
         })
-        .fold(
-            (0, 0),
-            |(gamma_rate, epsilon_rate), bit_pair| -> (u32, u32) {
-                (
-                    (gamma_rate << 1) + bit_pair.0,
-                    (epsilon_rate << 1) + bit_pair.1,
-                )
-            },
-        );
+        .fold((0, 0), |(gamma_rate, epsilon_rate), bit_pair| {
+            (
+                (gamma_rate << 1) + bit_pair.0,
+                (epsilon_rate << 1) + bit_pair.1,
+            )
+        });
     format!("{}", gamma_rate * epsilon_rate)
 }
 
@@ -79,7 +76,7 @@ fn part_1(input: &str) -> String {
 /// oxygen generator rating and CO2 scrubber rating, then multiply them together.
 /// What is the life support rating of the submarine?
 fn part_2(input: &str) -> String {
-    let diagnostics = parse_diagnostics(input);
+    let diagnostics = parse_input(input);
     let m = diagnostics[0].len();
     let mut prefixes = vec![0u32; (1 << (m + 1)) - 1];
     (0..m)
@@ -90,30 +87,27 @@ fn part_2(input: &str) -> String {
         })
         .flatten()
         .for_each(|prefix| prefixes[prefix] += 1);
-    let (oxygen_rate, co2_rate) = (0..m).fold(
-        (0, 0),
-        |(mut oxygen_rate, mut co2_rate), k| -> (usize, usize) {
-            let oxygen_prefix = ((1 << k) | oxygen_rate) << 1;
-            let co2_prefix = ((1 << k) | co2_rate) << 1;
-            if prefixes[oxygen_prefix | 1] >= prefixes[oxygen_prefix] {
-                oxygen_rate = (oxygen_rate << 1) | 1;
-            } else {
-                oxygen_rate <<= 1;
-            }
-            if prefixes[co2_prefix | 1] == 0
-                || prefixes[co2_prefix | 1] >= prefixes[co2_prefix] && prefixes[co2_prefix] > 0
-            {
-                co2_rate <<= 1;
-            } else {
-                co2_rate = (co2_rate << 1) | 1;
-            }
-            (oxygen_rate, co2_rate)
-        },
-    );
+    let (oxygen_rate, co2_rate) = (0..m).fold((0, 0), |(mut oxygen_rate, mut co2_rate), k| {
+        let oxygen_prefix = ((1 << k) | oxygen_rate) << 1;
+        let co2_prefix = ((1 << k) | co2_rate) << 1;
+        if prefixes[oxygen_prefix | 1] >= prefixes[oxygen_prefix] {
+            oxygen_rate = (oxygen_rate << 1) | 1;
+        } else {
+            oxygen_rate <<= 1;
+        }
+        if prefixes[co2_prefix | 1] == 0
+            || prefixes[co2_prefix | 1] >= prefixes[co2_prefix] && prefixes[co2_prefix] > 0
+        {
+            co2_rate <<= 1;
+        } else {
+            co2_rate = (co2_rate << 1) | 1;
+        }
+        (oxygen_rate, co2_rate)
+    });
     format!("{}", oxygen_rate * co2_rate)
 }
 
-fn parse_diagnostics(input: &str) -> Vec<Diagnostic> {
+fn parse_input(input: &str) -> Vec<Diagnostic> {
     input
         .lines()
         .map(|line| Diagnostic::from(line))
@@ -122,21 +116,21 @@ fn parse_diagnostics(input: &str) -> Vec<Diagnostic> {
 
 #[derive(Debug)]
 struct Diagnostic {
-    pub length: u32,
+    pub length: usize,
     pub report: u32,
 }
 
 impl Diagnostic {
-    fn digit_at(&self, k: u32) -> u32 {
+    fn digit_at(&self, k: usize) -> u32 {
         self.report & (1 << (self.length - 1 - k))
     }
 
-    fn len(&self) -> u32 {
+    fn len(&self) -> usize {
         self.length
     }
 
-    fn prefix(&self, k: u32) -> usize {
-        (self.report >> (self.length - 1 - k)) as usize
+    fn prefix(&self, k: usize) -> usize {
+        (self.report as usize) >> (self.length - 1 - k)
     }
 }
 

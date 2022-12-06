@@ -2,7 +2,7 @@ use std::fs;
 
 pub fn solve() -> (String, String) {
     let content = fs::read_to_string("inputs/y2021d01.txt").expect("file not found");
-    (part_1(content.as_str()), part_2(content.as_str()))
+    (part_1(&content), part_2(&content))
 }
 
 /// As the submarine drops below the surface of the ocean, it automatically
@@ -17,8 +17,8 @@ pub fn solve() -> (String, String) {
 /// PART 1 : Count the number of times a depth measurement increases from the
 /// previous measurement.
 fn part_1(input: &str) -> String {
-    let depths = parse_depths(input);
-    let depth_increases = (1..depths.len()).fold(0, |count, idx| -> i32 {
+    let depths = parse_input(input);
+    let depth_increases = (1..depths.len()).fold(0, |count, idx| {
         if depths[idx] > depths[idx - 1] {
             count + 1
         } else {
@@ -34,8 +34,8 @@ fn part_1(input: &str) -> String {
 /// PART 2 : Consider sums of a three-measurement sliding window. How many
 /// sums are larger than the previous sum?
 fn part_2(input: &str) -> String {
-    let depths = parse_depths(input);
-    let depth_increases = (3..depths.len()).fold(0, |count, n| -> i32 {
+    let depths = parse_input(input);
+    let depth_increases = (3..depths.len()).fold(0, |count, n| {
         if depths[n] > depths[n - 3] {
             count + 1
         } else {
@@ -45,24 +45,11 @@ fn part_2(input: &str) -> String {
     format!("{}", depth_increases)
 }
 
-fn parse_depths(input: &str) -> Vec<Depth> {
+fn parse_input(input: &str) -> Vec<u32> {
     input
         .lines()
-        .map(|line| Depth::from(line))
-        .collect::<Vec<Depth>>()
-}
-
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
-struct Depth {
-    pub dist: i32,
-}
-
-impl From<&str> for Depth {
-    fn from(line: &str) -> Depth {
-        Depth {
-            dist: line.parse::<i32>().expect("parse error"),
-        }
-    }
+        .map(|line| line.parse::<u32>().expect("parse error on depth"))
+        .collect::<Vec<u32>>()
 }
 
 #[cfg(test)]

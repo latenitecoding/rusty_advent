@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 use std::fs;
-use std::iter::Chain;
 use std::str::Chars;
 
 pub fn solve() -> (String, String) {
@@ -73,14 +72,14 @@ fn parse_input(input: &str) -> Vec<Rucksack> {
 
 fn intersect_group(group: &[Rucksack]) -> String {
     let mut init: HashSet<char> = HashSet::new();
-    group[0].iter().for_each(|ch| {
+    group[0].chars().for_each(|ch| {
         init.insert(ch);
     });
     group[1..]
         .iter()
         .fold(init, |set, sack| -> HashSet<char> {
             let mut inter: HashSet<char> = HashSet::new();
-            sack.iter().filter(|ch| set.contains(ch)).for_each(|ch| {
+            sack.chars().filter(|ch| set.contains(ch)).for_each(|ch| {
                 inter.insert(ch);
             });
             inter
@@ -89,51 +88,55 @@ fn intersect_group(group: &[Rucksack]) -> String {
         .collect::<String>()
 }
 
-fn priority_of(items: &String) -> u32 {
+fn priority_of(items: &str) -> u32 {
     items
         .chars()
         .map(|ch| {
             if 'a' <= ch && ch <= 'z' {
                 (ch as u32) - ('a' as u32) + 1
-            } else {
+            } else if 'A' <= ch && ch <= 'Z' {
                 (ch as u32) - ('A' as u32) + 27
+            } else {
+                0
             }
         })
         .sum::<u32>()
 }
 
 #[derive(Debug)]
-struct Rucksack {
-    pub left: String,
-    pub right: String,
+struct Rucksack<'a> {
+    pub items: &'a str,
 }
 
-impl From<&str> for Rucksack {
-    fn from(line: &str) -> Rucksack {
-        let n = line.len();
-        Rucksack {
-            left: line[..(n / 2)].to_string(),
-            right: line[(n / 2)..].to_string(),
-        }
+impl<'a> From<&'a str> for Rucksack<'a> {
+    fn from(items: &'a str) -> Rucksack<'a> {
+        Rucksack { items }
     }
 }
 
-impl Rucksack {
+impl Rucksack<'_> {
     fn intersect_compartments(&self) -> String {
         let mut left_set: HashSet<char> = HashSet::new();
-        for ch in self.left.chars() {
+        for ch in self.left() {
             left_set.insert(ch);
         }
-        self.right
-            .chars()
+        self.right()
             .filter(|ch| left_set.contains(ch))
             .collect::<HashSet<char>>()
             .iter()
             .collect::<String>()
     }
 
-    fn iter(&self) -> Chain<Chars<'_>, Chars<'_>> {
-        self.left.chars().chain(self.right.chars())
+    fn chars(&self) -> Chars<'_> {
+        self.items.chars()
+    }
+
+    fn left(&self) -> Chars<'_> {
+        self.items[..(self.items.len() / 2)].chars()
+    }
+
+    fn right(&self) -> Chars<'_> {
+        self.items[(self.items.len() / 2)..].chars()
     }
 }
 
