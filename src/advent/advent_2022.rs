@@ -5,6 +5,7 @@ mod day_02;
 mod day_03;
 mod day_04;
 mod day_05;
+mod day_06;
 
 pub fn select_day(day: u32) -> Option<(String, String)> {
     match day {
@@ -22,6 +23,9 @@ pub fn select_day(day: u32) -> Option<(String, String)> {
         )),
         5 => Some(day_05::solve(
             &fs::read_to_string("inputs/y2022d05.txt").expect("file not found"),
+        )),
+        6 => Some(day_06::solve(
+            &fs::read_to_string("inputs/y2022d06.txt").expect("file not found"),
         )),
         _ => None,
     }
