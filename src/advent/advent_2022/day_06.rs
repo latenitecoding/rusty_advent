@@ -31,20 +31,7 @@ pub fn solve(input: &str) -> (String, String) {
 /// PART 1 : How many characters need to be processed before the first
 /// start-of-packet marker is detected?
 fn part_1(input: &str) -> String {
-    let target_len = 4;
-    assert!(
-        input.len() >= target_len,
-        "input should include at least four characters"
-    );
-    let start_of_packet_marker = (target_len..=input.len())
-        .find(|n| {
-            input[(n - target_len)..*n]
-                .chars()
-                .collect::<HashSet<char>>()
-                .len()
-                == target_len
-        })
-        .expect("no solution");
+    let start_of_packet_marker = parse_input(input, 4);
     format!("{}", start_of_packet_marker)
 }
 
@@ -57,12 +44,17 @@ fn part_1(input: &str) -> String {
 /// PART 2 : How many characters need to be processed before the first
 /// start-of-message marker is detected?
 fn part_2(input: &str) -> String {
-    let target_len = 14;
+    let start_of_message_marker = parse_input(input, 14);
+    format!("{}", start_of_message_marker)
+}
+
+fn parse_input(input: &str, target_len: usize) -> usize {
     assert!(
         input.len() >= target_len,
-        "input should include at least four characters"
+        "input should include at least {} characters",
+        target_len
     );
-    let start_of_message_marker = (target_len..=input.len())
+    (target_len..=input.len())
         .find(|n| {
             input[(n - target_len)..*n]
                 .chars()
@@ -70,8 +62,7 @@ fn part_2(input: &str) -> String {
                 .len()
                 == target_len
         })
-        .expect("no solution");
-    format!("{}", start_of_message_marker)
+        .expect("no solution")
 }
 
 #[cfg(test)]

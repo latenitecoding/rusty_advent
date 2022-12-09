@@ -19,7 +19,7 @@ fn part_1(input: &str) -> String {
     let max_elf = parse_input(input)
         .into_iter()
         .max()
-        .expect("parsing input results in empty vector");
+        .expect("input has no maximum");
     format!("{}", max_elf)
 }
 
@@ -37,7 +37,10 @@ fn parse_input(input: &str) -> Vec<u32> {
         .map(|elf_inventory| {
             elf_inventory
                 .lines()
-                .map(|line| line.parse::<u32>().expect("parse<u32> error on calories"))
+                .map(|line| {
+                    line.parse::<u32>()
+                        .expect("could not parse line as u32 of calories")
+                })
                 .sum::<u32>()
         })
         .collect::<Vec<u32>>()

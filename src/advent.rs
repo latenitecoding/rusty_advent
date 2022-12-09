@@ -14,8 +14,7 @@ pub fn select_all_challenges() -> Vec<Solution> {
 }
 
 pub fn select_challenges_from_year(year: u32) -> Vec<Solution> {
-    DAYS
-        .filter_map(|day| select_challenge(year, day))
+    DAYS.filter_map(|day| select_challenge(year, day))
         .collect::<Vec<Solution>>()
 }
 
@@ -52,6 +51,10 @@ pub struct Solution {
 
 impl fmt::Display for Solution {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Solution {{year = {}}}, {{day = {}}} => ({}, {})", self.year, self.day, self.part1, self.part2)
+        write!(
+            f,
+            "Solution {{year = {}}}, {{day = {}}} => ({}, {})",
+            self.year, self.day, self.part1, self.part2
+        )
     }
 }

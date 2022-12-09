@@ -26,8 +26,10 @@ pub fn solve(input: &str) -> (String, String) {
 fn part_1(input: &str) -> String {
     let total_score = parse_input(input)
         .into_iter()
-        .map(|pair| (pair.0, Throw::from(pair.1)))
-        .fold(0, |score, throws| score + scoring_of(&throws.0, &throws.1));
+        .map(|(opp_throw, player_key)| (opp_throw, Throw::from(&player_key)))
+        .fold(0, |score, (opp_throw, player_throw)| {
+            score + scoring_of(&opp_throw, &player_throw)
+        });
     format!("{}", total_score)
 }
 
@@ -40,8 +42,15 @@ fn part_1(input: &str) -> String {
 fn part_2(input: &str) -> String {
     let total_score = parse_input(input)
         .into_iter()
-        .map(|pair| (pair.0, Throw::from((pair.0, Ordering::from(pair.1)))))
-        .fold(0, |score, throws| score + scoring_of(&throws.0, &throws.1));
+        .map(|(opp_throw, player_key)| {
+            (
+                opp_throw,
+                Throw::from((&opp_throw, &Ordering::from(&player_key))),
+            )
+        })
+        .fold(0, |score, (opp_throw, player_throw)| {
+            score + scoring_of(&opp_throw, &player_throw)
+        });
     format!("{}", total_score)
 }
 
@@ -53,15 +62,16 @@ fn parse_input(input: &str) -> Vec<(Throw, Key)> {
             assert_eq!(
                 parts.len(),
                 2,
-                "each line should include two space-delimited symbols"
+                "could not parse {:?} as two space-delimited throws",
+                line
             );
             (
                 parts[0]
                     .parse::<Throw>()
-                    .expect("parse error from line to Throw"),
+                    .expect("could not parse Throw from line"),
                 parts[1]
                     .parse::<Key>()
-                    .expect("parse error from line to Key"),
+                    .expect("could not parse Key from line"),
             )
         })
         .collect::<Vec<(Throw, Key)>>()
@@ -93,7 +103,7 @@ impl FromStr for Key {
             "X" => Ok(Key::X),
             "Y" => Ok(Key::Y),
             "Z" => Ok(Key::Z),
-            _ => Err("can only parse 'X', 'Y', and 'Z' as Keys"),
+            _ => Err("unrecognized symbol cannot be matched as Key"),
         }
     }
 }
@@ -113,13 +123,13 @@ impl FromStr for Throw {
             "A" => Ok(Throw::Rock),
             "B" => Ok(Throw::Paper),
             "C" => Ok(Throw::Scissors),
-            _ => Err("can only parse 'A', 'B', and 'C' as Throws"),
+            _ => Err("unrecognized symbol cannot be matched as Throw"),
         }
     }
 }
 
-impl From<Key> for Throw {
-    fn from(key: Key) -> Throw {
+impl From<&Key> for Throw {
+    fn from(key: &Key) -> Throw {
         match key {
             Key::X => Throw::Rock,
             Key::Y => Throw::Paper,
@@ -128,16 +138,17 @@ impl From<Key> for Throw {
     }
 }
 
-impl From<(Throw, Ordering)> for Throw {
-    fn from(pair: (Throw, Ordering)) -> Throw {
-        match pair.1 {
-            Ordering::Less => match pair.0 {
+impl From<(&Throw, &Ordering)> for Throw {
+    fn from(pair: (&Throw, &Ordering)) -> Throw {
+        let (opp_throw, player_key) = pair;
+        match player_key {
+            Ordering::Less => match opp_throw {
                 Throw::Rock => Throw::Scissors,
                 Throw::Paper => Throw::Rock,
                 Throw::Scissors => Throw::Rock,
             },
-            Ordering::Equal => pair.0,
-            Ordering::Greater => match pair.0 {
+            Ordering::Equal => opp_throw.clone(),
+            Ordering::Greater => match opp_throw {
                 Throw::Rock => Throw::Paper,
                 Throw::Paper => Throw::Scissors,
                 Throw::Scissors => Throw::Rock,
@@ -169,8 +180,8 @@ impl From<&Throw> for u32 {
     }
 }
 
-impl From<Key> for Ordering {
-    fn from(key: Key) -> Ordering {
+impl From<&Key> for Ordering {
+    fn from(key: &Key) -> Ordering {
         match key {
             Key::X => Ordering::Less,
             Key::Y => Ordering::Equal,

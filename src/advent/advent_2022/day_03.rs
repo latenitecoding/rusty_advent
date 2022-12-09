@@ -52,10 +52,9 @@ fn part_1(input: &str) -> String {
 /// PART 2 : Find the item type that corresponds to the badges of each three-Elf
 /// group. What is the sum of the priorities of those item types?
 fn part_2(input: &str) -> String {
-    let rucksacks = parse_input(input);
-    let priority_sum = (3..=rucksacks.len())
-        .step_by(3)
-        .map(|n| intersect_group(&rucksacks[(n - 3)..n]))
+    let priority_sum = parse_input(input)
+        .chunks(3)
+        .map(|chunk| intersect_chunk(chunk))
         .map(|badge| priority_of(&badge))
         .sum::<u32>();
     format!("{}", priority_sum)
@@ -68,19 +67,18 @@ fn parse_input(input: &str) -> Vec<Rucksack> {
         .collect::<Vec<Rucksack>>()
 }
 
-fn intersect_group(group: &[Rucksack]) -> String {
-    let mut init: HashSet<char> = HashSet::new();
-    group[0].chars().for_each(|ch| {
-        init.insert(ch);
-    });
-    group[1..]
+fn intersect_chunk(chunk: &[Rucksack]) -> String {
+    assert!(!chunk.is_empty(), "cannot intersect empty chunk");
+    let init = chunk[0].chars().collect::<HashSet<char>>();
+    if chunk.len() == 1 {
+        return init.iter().collect::<String>();
+    }
+    chunk[1..]
         .iter()
-        .fold(init, |set, sack| -> HashSet<char> {
-            let mut inter: HashSet<char> = HashSet::new();
-            sack.chars().filter(|ch| set.contains(ch)).for_each(|ch| {
-                inter.insert(ch);
-            });
-            inter
+        .fold(init, |set, sack| {
+            sack.chars()
+                .filter(|ch| set.contains(ch))
+                .collect::<HashSet<char>>()
         })
         .iter()
         .collect::<String>()
@@ -114,10 +112,7 @@ impl<'a> From<&'a str> for Rucksack<'a> {
 
 impl Rucksack<'_> {
     fn intersect_compartments(&self) -> String {
-        let mut left_set: HashSet<char> = HashSet::new();
-        for ch in self.left() {
-            left_set.insert(ch);
-        }
+        let left_set = self.left().collect::<HashSet<char>>();
         self.right()
             .filter(|ch| left_set.contains(ch))
             .collect::<HashSet<char>>()

@@ -53,19 +53,26 @@ fn parse_input_stacks(input: &str) -> Vec<Vec<char>> {
         .lines()
         .rev()
         .skip(1)
-        .fold(Vec::new(), |mut stacks, line| {
-            while stacks.len() <= line.len() / 4 {
-                stacks.push(Vec::new());
-            }
-            (2..line.len())
+        .map(|line| {
+            line.chars()
+                .skip(1)
                 .step_by(4)
-                .filter(|n| !line[(n - 2)..=*n].trim().is_empty())
-                .for_each(|n| {
-                    let ch = line[(n - 2)..=n]
-                        .chars()
-                        .nth(1)
-                        .expect("no letter ID for cargo");
-                    stacks[n / 4].push(ch);
+                .map(|ch| match ch {
+                    ' ' => None,
+                    _ => Some(ch),
+                })
+                .collect::<Vec<Option<char>>>()
+        })
+        .fold(Vec::new(), |mut stacks, cargo| {
+            cargo
+                .into_iter()
+                .enumerate()
+                .filter(|(_, cargo_crate)| cargo_crate.is_some())
+                .for_each(|(i, cargo_crate)| {
+                    while stacks.len() <= i {
+                        stacks.push(Vec::new());
+                    }
+                    stacks[i].push(cargo_crate.expect("could not unwrap crate"));
                 });
             stacks
         })
@@ -83,13 +90,13 @@ fn parse_input_queries(input: &str) -> Vec<(usize, usize, usize)> {
             (
                 parts[1]
                     .parse::<usize>()
-                    .expect("parse error on cargo swap size"),
+                    .expect("could not parse usize of cargo swap size"),
                 parts[3]
                     .parse::<usize>()
-                    .expect("parse error on origin stack"),
+                    .expect("could not parse usize of origin stack"),
                 parts[5]
                     .parse::<usize>()
-                    .expect("parse error on dest stack"),
+                    .expect("could not parse usize of dest stack"),
             )
         })
         .collect::<Vec<(usize, usize, usize)>>()
@@ -99,7 +106,7 @@ fn skim_top(stacks: &Vec<Vec<char>>) -> String {
     stacks
         .iter()
         .filter(|stack| !stack.is_empty())
-        .map(|stack| stack.last().expect("cargo stack is empty"))
+        .map(|stack| stack.last().expect("cargo stack has no last element"))
         .collect::<String>()
 }
 
